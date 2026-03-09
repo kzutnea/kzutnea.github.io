@@ -195,3 +195,13 @@ header.new {
     background-color: var(--color-on-background);
     color: var(--color-background);
 }
+
+.mobile-layout-toggle {
+    opacity: 0.5;
+    transition: opacity 100ms ease, background-color 100ms ease;
+}
+
+.mobile.root .mobile-layout-toggle {
+    opacity: 1;
+    background-color: rgba(255, 255, 255, 0.25) !important;
+}

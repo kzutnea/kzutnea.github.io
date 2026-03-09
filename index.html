@@ -38,13 +38,16 @@
             document.querySelectorAll('.list__home')[0].classList.add('router-link-active')
         }
     ">
-    <div class="root" :class="{ dark: store.dark, shitty: store.shitty }">
+    <div class="root" :class="{ dark: store.dark, shitty: store.shitty, mobile: store.mobile }">
         <header class="surface">
             <div class="logo">
                 <div v-else class="logo">
                     <h2>ULL</h2>
                     <p>v1.2.0</p>
                 </div>
+                <button class="nav__icon mobile-layout-toggle" title="Toggle mobile layout" style="margin-left:0.25rem;" @click.prevent="store.toggleMobile()">
+                    <img src="/assets/phone-landscape.svg" alt="Mobile layout" />
+                </button>
             </div>
             <nav class="nav">
                 <router-link class="nav__tab list__home" to="/">
