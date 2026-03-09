@@ -25,12 +25,14 @@
         var nav = qs('header.new .nav');
         if (!nav) return;
 
+        /* Menu button — sits after .nav inside header.new */
         var menuBtn = document.createElement('button');
         menuBtn.id = 'mobile-menu-btn';
         menuBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
         nav.parentElement.appendChild(menuBtn);
         menuBtn.addEventListener('click', openDrawerMenu);
 
+        /* Overlay shell */
         var overlay = document.createElement('div');
         overlay.id = 'mobile-drawer-overlay';
 
@@ -42,7 +44,7 @@
         var drawer = document.createElement('div');
         drawer.id = 'mobile-drawer';
 
-        /* Header */
+        /* Drawer header */
         var dh = document.createElement('div');
         dh.id = 'mobile-drawer-header';
         dh.innerHTML = '<span>Menu</span>';
@@ -53,7 +55,7 @@
         dh.appendChild(closeX);
         drawer.appendChild(dh);
 
-        /* Display Section */
+        /* Section: Display */
         drawer.appendChild(mkSectionTitle('Display'));
         var dispSect = document.createElement('div');
         dispSect.className = 'mobile-drawer-section';
@@ -61,21 +63,13 @@
         dispSect.appendChild(makeToggleRow('Level colors', 'color'));
         drawer.appendChild(dispSect);
 
-        /* Filters Section */
-        drawer.appendChild(mkSectionTitle('Filters'));
-        var filterSect = document.createElement('div');
-        filterSect.className = 'mobile-drawer-section';
-        buildFilters(filterSect);
-        drawer.appendChild(filterSect);
-
-        /* Settings & Social Section */
-        drawer.appendChild(mkSectionTitle('Settings & Social'));
+        /* Section: Settings & Social */
+        drawer.appendChild(mkSectionTitle('Settings & Links'));
         var setSect = document.createElement('div');
         setSect.className = 'mobile-drawer-section';
         
         // Theme Toggle
-        var themeRow = makeToggleRow('Dark Mode', 'theme');
-        setSect.appendChild(themeRow);
+        setSect.appendChild(makeToggleRow('Dark Mode', 'theme'));
         
         // Discord Link
         var discBtn = document.createElement('button');
@@ -85,13 +79,21 @@
         setSect.appendChild(discBtn);
         drawer.appendChild(setSect);
 
-        /* Info Section (Merged) */
+        /* Section: Filters */
+        drawer.appendChild(mkSectionTitle('Filters'));
+        var filterSect = document.createElement('div');
+        filterSect.className = 'mobile-drawer-section';
+        filterSect.id = 'mobile-filter-section';
+        buildFilters(filterSect);
+        drawer.appendChild(filterSect);
+
+        /* Section: Info (Merged Legend, Guidelines, Editors) */
         drawer.appendChild(mkSectionTitle('Information'));
         var infoSect = document.createElement('div');
         infoSect.className = 'mobile-drawer-section';
         var infoBtn = document.createElement('button');
         infoBtn.className = 'mobile-drawer-info-btn';
-        infoBtn.innerHTML = '<span>Legend, Guidelines & Editors</span><span class="arrow">&#8250;</span>';
+        infoBtn.innerHTML = '<span>Legend, Guidelines &amp; Editors</span><span class="arrow">&#8250;</span>';
         infoBtn.addEventListener('click', function () { closeDrawerMenu(); openInfoOverlay(); });
         infoSect.appendChild(infoBtn);
         drawer.appendChild(infoSect);
@@ -111,13 +113,10 @@
         if (!pill) return;
         var isDark = document.documentElement.classList.contains('dark-theme') || document.body.classList.contains('dark-theme');
         pill.classList.toggle('on', isDark);
-        
         pill.parentElement.addEventListener('click', function() {
             var active = document.documentElement.classList.toggle('dark-theme');
             document.body.classList.toggle('dark-theme', active);
             pill.classList.toggle('on', active);
-            // Persistence if the site uses localStorage
-            localStorage.setItem('theme', active ? 'dark' : 'light');
         });
     }
 
@@ -211,6 +210,7 @@
         document.body.style.overflow = '';
     }
 
+    /* ---- Combined info overlay (3 tabs) ---- */
     function openInfoOverlay() {
         var existing = qs('#mobile-info-overlay');
         if (existing) existing.remove();
@@ -219,6 +219,7 @@
         el.className = 'mobile-overlay';
         el.id = 'mobile-info-overlay';
 
+        /* Header */
         var hdr = document.createElement('div');
         hdr.className = 'mobile-overlay__header';
         hdr.innerHTML = '<span class="mobile-overlay__title">Info</span>';
@@ -227,27 +228,33 @@
         cx.innerHTML = '&times;';
         cx.addEventListener('click', function () {
             el.classList.remove('visible');
-            setTimeout(function() { el.remove(); document.body.style.overflow = ''; }, 240);
+            el.addEventListener('transitionend', function () {
+                el.remove();
+                document.body.style.overflow = '';
+            }, { once: true });
         });
         hdr.appendChild(cx);
         el.appendChild(hdr);
 
+        /* Tab bar */
         var tabBar = document.createElement('div');
         tabBar.className = 'mobile-info-tabs';
         el.appendChild(tabBar);
 
+        /* Body */
         var body = document.createElement('div');
         body.className = 'mobile-overlay__body';
         el.appendChild(body);
 
         var tabDefs = [
-            { key: 'legend', label: 'Legend' },
+            { key: 'legend',     label: 'Legend' },
             { key: 'guidelines', label: 'Guidelines' },
-            { key: 'editors', label: 'Editors' }
+            { key: 'editors',    label: 'Editors' }
         ];
         var panels = {};
 
         tabDefs.forEach(function (t, i) {
+            /* Tab button */
             var btn = document.createElement('button');
             btn.className = 'mobile-info-tab' + (i === 0 ? ' active' : '');
             btn.textContent = t.label;
@@ -259,6 +266,7 @@
             });
             tabBar.appendChild(btn);
 
+            /* Panel */
             var panel = document.createElement('div');
             panel.className = 'mobile-info-panel' + (i === 0 ? ' active' : '');
             panel.innerHTML = getInfoHTML(t.key);
@@ -268,7 +276,9 @@
 
         document.body.appendChild(el);
         document.body.style.overflow = 'hidden';
-        requestAnimationFrame(function () { el.classList.add('visible'); });
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () { el.classList.add('visible'); });
+        });
     }
 
     function getInfoHTML(id) {
@@ -287,7 +297,9 @@
         if (id === 'guidelines') {
             return '<p>The guidelines explain how each aspect of the Upcoming Level List works.</p>'
                  + '<a href="https://docs.google.com/document/d/13dmRfx2OCiLEaM2EcgEd-mKdok11_k8k7HsA5a-K6nY/edit?usp=sharing"'
-                 + ' target="_blank" rel="noopener" class="mobile-action-btn">View guidelines</a>';
+                 + ' target="_blank" rel="noopener"'
+                 + ' style="display:inline-block;padding:0.6rem 1rem;background:var(--color-primary);color:var(--color-on-primary);border-radius:0.4rem;font-weight:600;text-decoration:none;font-family:\'Lexend Deca\',sans-serif;">'
+                 + 'View guidelines</a>';
         }
         if (id === 'editors') {
             if (metaEl) {
@@ -318,6 +330,7 @@
         }).join('');
     }
 
+    /* ---- Inline level drawers ---- */
     function bindListRows() {
         if (!isMobile()) return;
         document.querySelectorAll('.page-list .list tr:not(.mobile-drawer-tr)').forEach(function (row) {
@@ -383,9 +396,17 @@
             if (!le) { lc2.style.display = p || 'none'; return; }
             var cl = le.cloneNode(true);
             lc2.style.display = p || 'none';
-            var drw = dtr.querySelector('.mobile-level-drawer');
-            if (drw) { drw.innerHTML = ''; drw.appendChild(cl); }
-        }).observe(lc, { childList: true, subtree: true });
+            var newDrw = document.createElement('div');
+            newDrw.className = 'mobile-level-drawer open';
+            newDrw.appendChild(cl);
+            var newTd = document.createElement('td');
+            newTd.colSpan = 3;
+            newTd.appendChild(newDrw);
+            var newTr = document.createElement('tr');
+            newTr.className = 'mobile-drawer-tr';
+            newTr.appendChild(newTd);
+            dtr.replaceWith(newTr);
+        }).observe(lc, { childList: true, subtree: true, characterData: true });
     }
 
     var booted = false;
@@ -410,6 +431,11 @@
         ['#mobile-menu-btn','#mobile-drawer-overlay','#mobile-info-overlay'].forEach(function (s) {
             var e = qs(s); if (e) e.remove();
         });
+        setTimeout(function () {
+            var iv2 = setInterval(function () {
+                if (qs('header.new .nav') && qs('.page-list')) { clearInterval(iv2); boot(); }
+            }, 100);
+        }, 200);
     });
 
 }());
