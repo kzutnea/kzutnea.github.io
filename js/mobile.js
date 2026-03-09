@@ -5,10 +5,10 @@
     function isMobile() { return window.innerWidth <= BP; }
     function qs(s, r) { return (r || document).querySelector(s); }
 
-    var drawerBuilt = false;
     var openDrawerRow = null;
     var listObserver = null;
     var levelObserver = null;
+    var booted = false;
 
     function getStore() {
         var root = document.getElementById('app');
@@ -24,9 +24,7 @@
         return app.__vue_app__.config.globalProperties.$router;
     }
 
-    function currentHash() {
-        return location.hash || '#/';
-    }
+    function currentHash() { return location.hash || '#/'; }
 
     var listOptions = [
         { label: 'All Levels',   hash: '#/',            matches: ['#/', '#/listmain', '#/listfuture', ''] },
@@ -36,83 +34,92 @@
         { label: 'Pending List', hash: '#/pending',     matches: ['#/pending'] }
     ];
 
-    function buildDrawer() {
-        if (drawerBuilt) return;
-        drawerBuilt = true;
-
-        var header = qs('header.surface');
-        if (!header) return;
-
-        var menuBtn = document.createElement('button');
-        menuBtn.id = 'mobile-menu-btn';
-        menuBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
-        header.appendChild(menuBtn);
-        menuBtn.addEventListener('click', openDrawerMenu);
-
-        var overlay = document.createElement('div');
-        overlay.id = 'mobile-drawer-overlay';
-
-        var backdrop = document.createElement('div');
-        backdrop.id = 'mobile-drawer-backdrop';
-        backdrop.addEventListener('click', closeDrawerMenu);
-        overlay.appendChild(backdrop);
-
-        var drawer = document.createElement('div');
-        drawer.id = 'mobile-drawer';
-
-        var dh = document.createElement('div');
-        dh.id = 'mobile-drawer-header';
-        dh.innerHTML = '<span>Menu</span>';
-        var closeX = document.createElement('button');
-        closeX.id = 'mobile-drawer-close';
-        closeX.innerHTML = '&times;';
-        closeX.addEventListener('click', closeDrawerMenu);
-        dh.appendChild(closeX);
-        drawer.appendChild(dh);
-
-        drawer.appendChild(mkSectionTitle('Lists'));
-        var listSect = document.createElement('div');
-        listSect.className = 'mobile-drawer-section';
-        listSect.id = 'mobile-list-section';
-        buildListSwitcher(listSect);
-        drawer.appendChild(listSect);
-
-        drawer.appendChild(mkSectionTitle('Settings'));
-        var settingsSect = document.createElement('div');
-        settingsSect.className = 'mobile-drawer-section';
-        settingsSect.appendChild(makeDarkModeRow());
-        var discordBtn = document.createElement('a');
-        discordBtn.className = 'mobile-drawer-info-btn';
-        discordBtn.href = 'https://discord.gg/9wVWSgJSe8';
-        discordBtn.target = '_blank';
-        discordBtn.rel = 'noopener';
-        discordBtn.style.textDecoration = 'none';
-        discordBtn.innerHTML = '<span>Discord</span><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.35"><path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963.021-.04.001-.088-.041-.104a13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028z"/></svg>';
-        settingsSect.appendChild(discordBtn);
-        drawer.appendChild(settingsSect);
-
-        drawer.appendChild(mkSectionTitle('Info'));
-        var infoSect = document.createElement('div');
-        infoSect.className = 'mobile-drawer-section';
-        var infoBtn = document.createElement('button');
-        infoBtn.className = 'mobile-drawer-info-btn';
-        infoBtn.innerHTML = '<span>Info</span><span class="arrow">&#8250;</span>';
-        infoBtn.addEventListener('click', function () { closeDrawerMenu(); openInfoOverlay(); });
-        infoSect.appendChild(infoBtn);
-        drawer.appendChild(infoSect);
-
-        overlay.appendChild(drawer);
-        document.body.appendChild(overlay);
+    function boot() {
+        if (!isMobile() || booted) return;
+        if (!qs('header.surface')) return;
+        booted = true;
+        buildHeader();
+        buildBottomBar();
+        rebind();
     }
 
-    function buildListSwitcher(container) {
+    function buildHeader() {
+        var header = qs('header.surface');
+        if (!header || qs('#mob-menu-btn')) return;
+        var btn = document.createElement('button');
+        btn.id = 'mob-menu-btn';
+        btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
+        header.appendChild(btn);
+        btn.addEventListener('click', toggleBar);
+    }
+
+    function buildBottomBar() {
+        if (qs('#mob-bar')) return;
+
+        var bar = document.createElement('div');
+        bar.id = 'mob-bar';
+
+        var tabRow = document.createElement('div');
+        tabRow.id = 'mob-tabs';
+
+        var panelWrap = document.createElement('div');
+        panelWrap.id = 'mob-panels';
+
+        var tabs = [
+            { id: 'lists',   label: 'Lists' },
+            { id: 'filters', label: 'Filters' },
+            { id: 'info',    label: 'Info' }
+        ];
+
+        tabs.forEach(function (t, i) {
+            var btn = document.createElement('button');
+            btn.className = 'mob-tab' + (i === 0 ? ' active' : '');
+            btn.textContent = t.label;
+            btn.dataset.tab = t.id;
+            btn.addEventListener('click', function () {
+                bar.querySelectorAll('.mob-tab').forEach(function (b) { b.classList.remove('active'); });
+                bar.querySelectorAll('.mob-panel').forEach(function (p) { p.classList.remove('active'); });
+                btn.classList.add('active');
+                qs('#mob-panel-' + t.id).classList.add('active');
+            });
+            tabRow.appendChild(btn);
+
+            var panel = document.createElement('div');
+            panel.className = 'mob-panel' + (i === 0 ? ' active' : '');
+            panel.id = 'mob-panel-' + t.id;
+            panelWrap.appendChild(panel);
+        });
+
+        bar.appendChild(tabRow);
+        bar.appendChild(panelWrap);
+        document.body.appendChild(bar);
+
+        buildListsPanel(qs('#mob-panel-lists'));
+        buildFiltersPanel(qs('#mob-panel-filters'));
+        buildInfoPanel(qs('#mob-panel-info'));
+    }
+
+    function toggleBar() {
+        var bar = qs('#mob-bar');
+        if (!bar) return;
+        bar.classList.toggle('open');
+        updateListActive();
+    }
+
+    function closeBar() {
+        var bar = qs('#mob-bar');
+        if (bar) bar.classList.remove('open');
+    }
+
+    function buildListsPanel(container) {
         var h = currentHash();
         listOptions.forEach(function (opt) {
             var row = document.createElement('div');
-            row.className = 'mobile-drawer-filter' + (opt.matches.indexOf(h) !== -1 ? ' active' : '');
-            row.innerHTML = '<span>' + opt.label + '</span><span class="check">&#10003;</span>';
+            row.className = 'mob-row' + (opt.matches.indexOf(h) !== -1 ? ' active' : '');
+            row.dataset.listHash = opt.hash;
+            row.innerHTML = '<span>' + opt.label + '</span><span class="mob-check">&#10003;</span>';
             row.addEventListener('click', function () {
-                closeDrawerMenu();
+                closeBar();
                 removeInlineDrawer();
                 var router = getRouter();
                 var path = opt.hash.replace(/^#/, '');
@@ -122,7 +129,7 @@
                     location.hash = opt.hash;
                 }
                 setTimeout(updateListActive, 300);
-                setTimeout(rebindAfterRouteChange, 400);
+                setTimeout(rebind, 400);
             });
             container.appendChild(row);
         });
@@ -130,38 +137,54 @@
 
     function updateListActive() {
         var h = currentHash();
-        var rows = document.querySelectorAll('#mobile-list-section .mobile-drawer-filter');
-        rows.forEach(function (row, i) {
+        document.querySelectorAll('#mob-panel-lists .mob-row').forEach(function (row, i) {
             var opt = listOptions[i];
             if (!opt) return;
             row.classList.toggle('active', opt.matches.indexOf(h) !== -1);
         });
     }
 
-    function mkSectionTitle(text) {
-        var d = document.createElement('div');
-        d.className = 'mobile-drawer-section-title';
-        d.textContent = text;
-        return d;
+    function buildFiltersPanel(container) {
+        var sep = document.createElement('div');
+        sep.className = 'mob-sep';
+
+        setTimeout(function () {
+            var c = findListComp();
+            if (!c || !c.filtersList) return;
+            c.filtersList.forEach(function (item, idx) {
+                if (item.separator) {
+                    container.appendChild(mkSep());
+                    return;
+                }
+                var row = document.createElement('div');
+                row.className = 'mob-row' + (item.active ? ' active' : '');
+                row.innerHTML = '<span>' + item.name + '</span><span class="mob-check">&#10003;</span>';
+                row.addEventListener('click', function () {
+                    var fc = findListComp();
+                    if (!fc) return;
+                    fc.useFilter(idx);
+                    row.classList.toggle('active', !!fc.filtersList[idx].active);
+                });
+                container.appendChild(row);
+            });
+        }, 600);
     }
 
-    function makeDarkModeRow() {
-        var row = document.createElement('div');
-        row.className = 'mobile-drawer-toggle';
+    function buildInfoPanel(container) {
+        var darkRow = document.createElement('div');
+        darkRow.className = 'mob-toggle-row';
         var pill = document.createElement('div');
-        pill.className = 'mobile-toggle-pill';
-        pill.id = 'mobile-pill-darkmode';
-        row.innerHTML = '<span>Dark mode</span>';
-        row.appendChild(pill);
+        pill.className = 'mob-pill';
+        pill.id = 'mob-dark-pill';
+        darkRow.innerHTML = '<span>Dark mode</span>';
+        darkRow.appendChild(pill);
 
         function isDark() {
             var root = qs('.root');
             return root ? root.classList.contains('dark') : false;
         }
-
         setTimeout(function () { pill.classList.toggle('on', isDark()); }, 300);
-
-        row.addEventListener('click', function () {
+        darkRow.addEventListener('click', function () {
             var store = getStore();
             if (store && typeof store.toggleDark === 'function') {
                 store.toggleDark();
@@ -171,35 +194,56 @@
             }
             setTimeout(function () { pill.classList.toggle('on', isDark()); }, 80);
         });
-        return row;
+        container.appendChild(darkRow);
+
+        container.appendChild(mkSep());
+
+        var discordRow = document.createElement('a');
+        discordRow.className = 'mob-row';
+        discordRow.href = 'https://discord.gg/9wVWSgJSe8';
+        discordRow.target = '_blank';
+        discordRow.rel = 'noopener';
+        discordRow.innerHTML = '<span>Discord</span><span class="mob-ext">&#8599;</span>';
+        container.appendChild(discordRow);
+
+        container.appendChild(mkSep());
+
+        var infoRow = document.createElement('div');
+        infoRow.className = 'mob-row';
+        infoRow.innerHTML = '<span>Info</span><span class="mob-ext">&#8250;</span>';
+        infoRow.addEventListener('click', function () { closeBar(); openInfoOverlay(); });
+        container.appendChild(infoRow);
     }
 
-    function openDrawerMenu() {
-        updateListActive();
-        var o = qs('#mobile-drawer-overlay');
-        if (o) o.classList.add('open');
-        document.body.style.overflow = 'hidden';
+    function mkSep() {
+        var s = document.createElement('div');
+        s.className = 'mob-sep';
+        return s;
     }
 
-    function closeDrawerMenu() {
-        var o = qs('#mobile-drawer-overlay');
-        if (o) o.classList.remove('open');
-        document.body.style.overflow = '';
+    function findListComp() {
+        var el = qs('.page-list');
+        while (el) {
+            var c = el.__vueParentComponent;
+            if (c && c.proxy && c.proxy.showThumbnails !== undefined) return c.proxy;
+            el = el.parentElement;
+        }
+        return null;
     }
 
     function openInfoOverlay() {
-        var existing = qs('#mobile-info-overlay');
+        var existing = qs('#mob-info-overlay');
         if (existing) existing.remove();
 
         var el = document.createElement('div');
-        el.className = 'mobile-overlay';
-        el.id = 'mobile-info-overlay';
+        el.className = 'mob-info-overlay';
+        el.id = 'mob-info-overlay';
 
         var hdr = document.createElement('div');
-        hdr.className = 'mobile-overlay__header';
-        hdr.innerHTML = '<span class="mobile-overlay__title">Info</span>';
+        hdr.className = 'mob-info-header';
+        hdr.innerHTML = '<span class="mob-info-title">Info</span>';
         var cx = document.createElement('button');
-        cx.className = 'mobile-overlay__close';
+        cx.className = 'mob-info-close';
         cx.innerHTML = '&times;';
         cx.addEventListener('click', function () {
             el.classList.remove('visible');
@@ -212,11 +256,11 @@
         el.appendChild(hdr);
 
         var tabBar = document.createElement('div');
-        tabBar.className = 'mobile-info-tabs';
+        tabBar.className = 'mob-info-tabs';
         el.appendChild(tabBar);
 
         var body = document.createElement('div');
-        body.className = 'mobile-overlay__body';
+        body.className = 'mob-info-body';
         el.appendChild(body);
 
         var tabDefs = [
@@ -228,10 +272,10 @@
 
         tabDefs.forEach(function (t, i) {
             var btn = document.createElement('button');
-            btn.className = 'mobile-info-tab' + (i === 0 ? ' active' : '');
+            btn.className = 'mob-info-tab' + (i === 0 ? ' active' : '');
             btn.textContent = t.label;
             btn.addEventListener('click', function () {
-                tabBar.querySelectorAll('.mobile-info-tab').forEach(function (b) { b.classList.remove('active'); });
+                tabBar.querySelectorAll('.mob-info-tab').forEach(function (b) { b.classList.remove('active'); });
                 btn.classList.add('active');
                 Object.keys(panels).forEach(function (k) { panels[k].classList.remove('active'); });
                 panels[t.key].classList.add('active');
@@ -239,7 +283,7 @@
             tabBar.appendChild(btn);
 
             var panel = document.createElement('div');
-            panel.className = 'mobile-info-panel' + (i === 0 ? ' active' : '');
+            panel.className = 'mob-info-panel' + (i === 0 ? ' active' : '');
             panel.innerHTML = getInfoHTML(t.key);
             panels[t.key] = panel;
             body.appendChild(panel);
@@ -304,24 +348,24 @@
     function bindListRows() {
         if (!isMobile()) return;
         document.querySelectorAll('.page-list .list tr:not(.mobile-drawer-tr)').forEach(function (row) {
-            if (row.dataset.mobileBound) return;
-            row.dataset.mobileBound = '1';
+            if (row.dataset.mb) return;
+            row.dataset.mb = '1';
             var btn = row.querySelector('button');
             if (!btn) return;
             btn.addEventListener('click', function (e) {
                 e.stopPropagation();
-                setTimeout(function () { toggleInlineDrawer(row); }, 80);
+                setTimeout(function () { toggleDrawer(row); }, 80);
             });
         });
     }
 
-    function clearBoundFlags() {
-        document.querySelectorAll('.page-list .list tr[data-mobile-bound]').forEach(function (row) {
-            row.removeAttribute('data-mobile-bound');
+    function clearBound() {
+        document.querySelectorAll('.page-list .list tr[data-mb]').forEach(function (r) {
+            r.removeAttribute('data-mb');
         });
     }
 
-    function toggleInlineDrawer(row) {
+    function toggleDrawer(row) {
         if (openDrawerRow === row) { removeInlineDrawer(); return; }
         removeInlineDrawer();
 
@@ -357,7 +401,7 @@
         openDrawerRow = null;
     }
 
-    function watchLevelContainer() {
+    function watchLevel() {
         if (levelObserver) { levelObserver.disconnect(); levelObserver = null; }
         var lc = qs('.level-container');
         if (!lc) return;
@@ -387,7 +431,7 @@
         levelObserver.observe(lc, { childList: true, subtree: true, characterData: true });
     }
 
-    function rebindAfterRouteChange() {
+    function rebind() {
         removeInlineDrawer();
         if (listObserver) { listObserver.disconnect(); listObserver = null; }
         var attempts = 0;
@@ -396,27 +440,17 @@
             var tbl = qs('.page-list .list');
             if (tbl) {
                 clearInterval(poll);
-                clearBoundFlags();
+                clearBound();
                 bindListRows();
-                watchLevelContainer();
+                watchLevel();
                 listObserver = new MutationObserver(function () {
-                    clearBoundFlags();
+                    clearBound();
                     bindListRows();
                 });
                 listObserver.observe(tbl, { childList: true });
             }
             if (attempts > 50) clearInterval(poll);
         }, 100);
-    }
-
-    var booted = false;
-
-    function boot() {
-        if (!isMobile() || booted) return;
-        if (!qs('header.surface')) return;
-        booted = true;
-        buildDrawer();
-        rebindAfterRouteChange();
     }
 
     var bootPoll = setInterval(function () {
@@ -428,7 +462,7 @@
     window.addEventListener('hashchange', function () {
         updateListActive();
         removeInlineDrawer();
-        rebindAfterRouteChange();
+        rebind();
     });
 
 }());
