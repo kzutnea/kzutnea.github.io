@@ -63,22 +63,6 @@
         dispSect.appendChild(makeToggleRow('Level colors', 'color'));
         drawer.appendChild(dispSect);
 
-        /* Section: Settings & Social */
-        drawer.appendChild(mkSectionTitle('Settings & Links'));
-        var setSect = document.createElement('div');
-        setSect.className = 'mobile-drawer-section';
-        
-        // Theme Toggle
-        setSect.appendChild(makeToggleRow('Dark Mode', 'theme'));
-        
-        // Discord Link
-        var discBtn = document.createElement('button');
-        discBtn.className = 'mobile-drawer-info-btn';
-        discBtn.innerHTML = '<span>Join Discord</span><span class="arrow">&#8250;</span>';
-        discBtn.addEventListener('click', function() { window.open('https://discord.gg/upcominglist', '_blank'); });
-        setSect.appendChild(discBtn);
-        drawer.appendChild(setSect);
-
         /* Section: Filters */
         drawer.appendChild(mkSectionTitle('Filters'));
         var filterSect = document.createElement('div');
@@ -87,8 +71,8 @@
         buildFilters(filterSect);
         drawer.appendChild(filterSect);
 
-        /* Section: Info (Merged Legend, Guidelines, Editors) */
-        drawer.appendChild(mkSectionTitle('Information'));
+        /* Section: Info (single button) */
+        drawer.appendChild(mkSectionTitle('Info'));
         var infoSect = document.createElement('div');
         infoSect.className = 'mobile-drawer-section';
         var infoBtn = document.createElement('button');
@@ -98,26 +82,35 @@
         infoSect.appendChild(infoBtn);
         drawer.appendChild(infoSect);
 
+        /* Section: Theme */
+        drawer.appendChild(mkSectionTitle('Theme'));
+        var themeSect = document.createElement('div');
+        themeSect.className = 'mobile-drawer-section';
+        themeSect.appendChild(makeDarkModeRow());
+        drawer.appendChild(themeSect);
+
+        /* Section: Links */
+        drawer.appendChild(mkSectionTitle('Links'));
+        var linksSect = document.createElement('div');
+        linksSect.className = 'mobile-drawer-section';
+        var discordBtn = document.createElement('a');
+        discordBtn.className = 'mobile-drawer-info-btn';
+        discordBtn.href = 'https://discord.gg/upcoming-ll';
+        discordBtn.target = '_blank';
+        discordBtn.rel = 'noopener';
+        discordBtn.style.textDecoration = 'none';
+        discordBtn.innerHTML = '<span>Discord</span>'
+            + '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.4"><path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963.021-.04.001-.088-.041-.104a13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028z"/></svg>';
+        linksSect.appendChild(discordBtn);
+        drawer.appendChild(linksSect);
+
         overlay.appendChild(drawer);
         document.body.appendChild(overlay);
 
         setTimeout(function () {
             wireToggle('thumb', 'showThumbnails');
             wireToggle('color', 'showColors');
-            wireThemeToggle();
         }, 400);
-    }
-
-    function wireThemeToggle() {
-        var pill = qs('#mobile-pill-theme');
-        if (!pill) return;
-        var isDark = document.documentElement.classList.contains('dark-theme') || document.body.classList.contains('dark-theme');
-        pill.classList.toggle('on', isDark);
-        pill.parentElement.addEventListener('click', function() {
-            var active = document.documentElement.classList.toggle('dark-theme');
-            document.body.classList.toggle('dark-theme', active);
-            pill.classList.toggle('on', active);
-        });
     }
 
     function mkSectionTitle(text) {
@@ -135,6 +128,40 @@
         pill.id = 'mobile-pill-' + key;
         row.innerHTML = '<span>' + label + '</span>';
         row.appendChild(pill);
+        return row;
+    }
+
+    function makeDarkModeRow() {
+        var row = document.createElement('div');
+        row.className = 'mobile-drawer-toggle';
+        var pill = document.createElement('div');
+        pill.className = 'mobile-toggle-pill';
+        pill.id = 'mobile-pill-darkmode';
+        row.innerHTML = '<span>Dark mode</span>';
+        row.appendChild(pill);
+
+        /* Detect current theme and sync pill */
+        function isDark() {
+            return document.documentElement.classList.contains('dark')
+                || document.documentElement.getAttribute('data-theme') === 'dark'
+                || document.body.classList.contains('dark')
+                || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+                    && !document.documentElement.classList.contains('light'));
+        }
+        pill.classList.toggle('on', isDark());
+
+        row.addEventListener('click', function () {
+            /* Try to find and click the existing desktop toggle first */
+            var desktopToggle = document.querySelector('[data-theme-toggle], .theme-toggle, .color-scheme-toggle, button[aria-label*="dark" i], button[aria-label*="theme" i], button[title*="dark" i]');
+            if (desktopToggle) {
+                desktopToggle.click();
+            } else {
+                /* Fallback: manually toggle dark class */
+                document.documentElement.classList.toggle('dark');
+                document.body.classList.toggle('dark');
+            }
+            setTimeout(function () { pill.classList.toggle('on', isDark()); }, 60);
+        });
         return row;
     }
 
@@ -282,6 +309,7 @@
     }
 
     function getInfoHTML(id) {
+        /* Clone content from hidden meta-container */
         var metaEl = qs('.meta-container');
         if (id === 'legend') {
             if (metaEl) {
@@ -410,6 +438,7 @@
     }
 
     var booted = false;
+
     function boot() {
         if (!isMobile() || booted) return;
         if (!qs('header.new .nav')) return;
@@ -426,6 +455,7 @@
     }, 100);
 
     window.addEventListener('resize', function () { if (isMobile() && !booted) boot(); });
+
     window.addEventListener('hashchange', function () {
         booted = false; drawerBuilt = false; openDrawerRow = null;
         ['#mobile-menu-btn','#mobile-drawer-overlay','#mobile-info-overlay'].forEach(function (s) {
