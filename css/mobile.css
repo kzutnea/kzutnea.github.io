@@ -17,7 +17,7 @@
     .level-container { display: none !important; }
 
     /* -------------------------------------------------------
-       HEADER.SURFACE (logo bar)
+       HEADER.SURFACE (logo bar) — keep as flex, just shrink
     ------------------------------------------------------- */
     header.surface {
         height: 3.5rem !important;
@@ -26,15 +26,17 @@
     header.surface .logo img { height: 2.4rem !important; }
 
     /* -------------------------------------------------------
-       HEADER.NEW (tab bar) — FIXED: Shrink text & padding
+       HEADER.NEW (tab bar) — single row, don't overflow
     ------------------------------------------------------- */
     header.new {
         display: flex !important;
         flex-direction: row !important;
         align-items: stretch !important;
-        padding: 0 0.2rem 0 0.4rem !important;
+        /* inherit height from desktop (3.5rem) */
+        padding: 0 0.5rem 0 0.5rem !important;
         gap: 0 !important;
         overflow: visible !important;
+        /* don't go wider than viewport */
         width: 100% !important;
         box-sizing: border-box !important;
     }
@@ -56,8 +58,8 @@
     header.new .nav .nav__tab {
         flex-shrink: 1 !important;
         white-space: nowrap;
-        font-size: 0.68rem !important; /* Reduced from 0.78 to fit screen */
-        padding-inline: 0.35rem !important; /* Reduced from 0.5 to fit screen */
+        font-size: 0.68rem;
+        padding-inline: 0.35rem !important;
         padding-top: 2px !important;
         display: flex !important;
         align-items: center !important;
@@ -263,7 +265,7 @@
     .mobile-drawer-separator { height: 1px; background: rgba(128,128,128,0.13); margin: 0.18rem 0; }
 
     /* -------------------------------------------------------
-       FULL-SCREEN INFO OVERLAY
+       FULL-SCREEN INFO OVERLAY (Legend + Guidelines + Editors)
     ------------------------------------------------------- */
     .mobile-overlay {
         position: fixed;
@@ -309,6 +311,7 @@
         justify-content: center;
     }
 
+    /* Tab bar */
     .mobile-info-tabs {
         display: flex;
         border-bottom: 2px solid rgba(128,128,128,0.15);
@@ -329,7 +332,6 @@
         opacity: 0.45;
         transition: opacity 100ms, border-color 100ms;
         white-space: nowrap;
-        flex: 1;
     }
     .mobile-info-tab.active { opacity: 1; border-color: var(--color-primary); }
 
@@ -358,6 +360,7 @@
         padding: 0.45rem 0;
         border-bottom: 1px solid rgba(128,128,128,0.1);
     }
+    .mobile-overlay__body .legend-list li:last-child { border-bottom: none; }
     .mobile-overlay__body .legend-dot {
         width: 0.7rem; height: 0.7rem;
         border-radius: 50%;
@@ -384,7 +387,7 @@
     .mobile-overlay__body p { margin: 0 0 0.9rem; font-size: 0.9rem; }
 
     /* -------------------------------------------------------
-       LIST & LEVEL DRAWER
+       LIST — full width, real table rows
     ------------------------------------------------------- */
     .page-list {
         display: flex !important;
@@ -442,18 +445,20 @@
     .mobile-level-drawer.open { display: block; }
     .mobile-drawer-tr td { padding: 0 !important; }
 
-    /* FIXED: Remove Level Title (H1/H2) inside drawer */
-    .mobile-level-drawer .level h1,
-    .mobile-level-drawer .level h2 {
-        display: none !important;
-    }
-
+    /* The .level component inside the drawer */
     .mobile-level-drawer .level {
         max-width: 100% !important;
         padding-right: 0 !important;
         display: flex !important;
         flex-direction: column !important;
-        gap: 0.8rem !important;
+        gap: 1.1rem !important;   /* breathing room between every section */
+    }
+
+    .mobile-level-drawer .level h1,
+    .mobile-level-drawer .level h2 {
+        font-size: 1.15rem !important;
+        margin: 0 0 0.1rem !important;
+        line-height: 1.3 !important;
     }
 
     /* Video embed */
@@ -468,7 +473,7 @@
     .mobile-level-drawer .level-authors {
         display: grid !important;
         grid-template-columns: max-content 1fr !important;
-        gap: 0.4rem 0.75rem !important;
+        gap: 0.55rem 0.75rem !important;
         font-size: 0.85rem !important;
         line-height: 1.4 !important;
     }
@@ -486,33 +491,31 @@
         margin: 0 !important;
     }
 
-    /* FIXED: Stats spacing (ID, Length, Last Update) */
+    /* Stats row — ID / LENGTH / LAST UPDATE */
     .mobile-level-drawer .stats {
         display: flex !important;
-        gap: 0.8rem 1.8rem !important; /* Added huge gap between items */
+        gap: 0.9rem 1.5rem !important;
         flex-wrap: wrap !important;
-        padding: 0.2rem 0 !important;
-        margin: 0.5rem 0 0 !important; /* Added margin to top */
-        list-style: none !important;
+        padding: 0.25rem 0 !important;
     }
-    .mobile-level-drawer .stats li {
+    .mobile-level-drawer .stats > * {
+        margin: 0 !important;
+    }
+    .mobile-level-drawer .stats .stat,
+    .mobile-level-drawer .stats > div {
         display: flex !important;
-        flex-direction: column !important; /* Stack label over value for more room */
-        gap: 1px;
+        flex-direction: column !important;
+        gap: 0.15rem !important;
+        min-width: 4rem !important;
     }
 
-    /* Records table */
-    .mobile-level-drawer .records {
-        font-size: 0.82rem !important;
-        width: 100% !important;
-        margin-top: 0.5rem;
-    }
-    .mobile-level-drawer .records td,
-    .mobile-level-drawer .records th {
-        padding-block: 0.45rem !important;
+    /* Hide level title (h1/h2) in drawer — start at LEVEL AUTHOR */
+    .mobile-level-drawer .level > h1:first-of-type,
+    .mobile-level-drawer .level > h2:first-of-type,
+    .mobile-level-drawer .level-title,
+    .mobile-level-drawer .level > .type-label-h1,
+    .mobile-level-drawer .level > .type-label-h2 {
+        display: none !important;
     }
 
-    /* Misc components */
-    .search { margin-bottom: 0.6rem !important; }
-    .spinner { grid-column: span 1 !important; }
 }
