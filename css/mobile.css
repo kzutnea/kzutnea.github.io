@@ -1,11 +1,8 @@
 @media screen and (max-width: 768px) {
-    
-    html, body, .root {
-        height: auto;
-        min-height: 100%;
-    }
 
-    /* ── Kill fixed-height main ── */
+    /* Root scrollable */
+    html, body, .root { height: auto; min-height: 100%; }
+
     main {
         height: auto !important;
         flex: none !important;
@@ -14,78 +11,90 @@
         flex-direction: column !important;
         column-gap: 0 !important;
     }
-    main > div {
-        overflow-y: visible !important;
-    }
+    main > div { overflow-y: visible !important; }
 
-    /* ── Hide the right-side meta panel ── */
-    .meta-container {
-        display: none !important;
-    }
+    .meta-container  { display: none !important; }
+    .level-container { display: none !important; }
 
-    /* ── Hide the desktop level detail column (shown inline instead) ── */
-    .level-container {
-        display: none !important;
+    /* -------------------------------------------------------
+       HEADER.SURFACE (logo bar) — keep as flex, just shrink
+    ------------------------------------------------------- */
+    header.surface {
+        height: 3.5rem !important;
+        padding-inline: 1rem !important;
     }
+    header.surface .logo img { height: 2.4rem !important; }
 
-    /* ════════════════════════════════════
-       HEADER.NEW — tabs left, ☰ button right, one row
-    ════════════════════════════════════ */
+    /* -------------------------------------------------------
+       HEADER.NEW (tab bar) — single row, don't overflow
+    ------------------------------------------------------- */
     header.new {
         display: flex !important;
         flex-direction: row !important;
-        align-items: center !important;
-        height: 3rem !important;
-        padding: 0 0.75rem !important;
+        align-items: stretch !important;
+        /* inherit height from desktop (3.5rem) */
+        padding: 0 0.5rem 0 0.5rem !important;
         gap: 0 !important;
+        overflow: visible !important;
+        /* don't go wider than viewport */
+        width: 100% !important;
+        box-sizing: border-box !important;
     }
 
     header.new .nav {
         display: flex !important;
         flex-direction: row !important;
-        align-items: center !important;
+        align-items: stretch !important;
         flex-wrap: nowrap !important;
-        flex: 1 !important;
-        overflow-x: auto !important;
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+        column-gap: 0 !important;
         gap: 0 !important;
-        column-gap: 0.75rem !important;
         scrollbar-width: none;
-        -ms-overflow-style: none;
     }
     header.new .nav::-webkit-scrollbar { display: none; }
 
     header.new .nav .nav__tab {
+        flex-shrink: 1 !important;
         white-space: nowrap;
-        flex-shrink: 0;
-        padding-inline: 0.4rem;
-        font-size: 0.85rem;
+        font-size: 0.78rem;
+        padding-inline: 0.5rem !important;
+        padding-top: 2px !important;
+        display: flex !important;
+        align-items: center !important;
+        border-bottom: 3px solid transparent !important;
+        height: 100% !important;
+        box-sizing: border-box !important;
     }
 
-    /* Hide the existing filters/color/thumb controls in nav */
+    /* Hide existing desktop controls inside nav */
     header.new .nav .filters,
-    header.new .nav > div[style*="flex-grow"],
-    header.new .nav > div:not(.nav__tab):not(.nav__actions) {
+    header.new .nav .nav__actions,
+    header.new .nav > div:not([class*="nav__tab"]) {
         display: none !important;
     }
 
-    /* ── ☰ Menu button ── */
+    /* Menu button — lives as sibling of .nav inside header.new */
     #mobile-menu-btn {
         flex-shrink: 0;
         background: none;
         border: none;
         color: currentColor;
         cursor: pointer;
-        padding: 0.4rem 0.5rem;
-        border-radius: 0.35rem;
+        padding: 0 0.55rem;
         display: flex;
         align-items: center;
         justify-content: center;
+        border-radius: 0.3rem;
         transition: background 100ms;
-        margin-left: 0.25rem;
+        align-self: center;
     }
-    #mobile-menu-btn:hover { background: rgba(255,255,255,0.15); }
+    #mobile-menu-btn:hover { background: rgba(128,128,128,0.2); }
 
-    /* ── Slide-in drawer overlay ── */
+    /* -------------------------------------------------------
+       SIDE DRAWER
+    ------------------------------------------------------- */
     #mobile-drawer-overlay {
         display: none;
         position: fixed;
@@ -97,20 +106,21 @@
     #mobile-drawer-backdrop {
         position: absolute;
         inset: 0;
-        background: rgba(0,0,0,0.5);
+        background: rgba(0,0,0,0.45);
     }
 
     #mobile-drawer {
         position: absolute;
         top: 0; right: 0; bottom: 0;
-        width: min(80vw, 300px);
+        width: min(82vw, 290px);
         background: var(--color-background);
+        color: var(--color-on-background);
         display: flex;
         flex-direction: column;
         overflow-y: auto;
         transform: translateX(100%);
-        transition: transform 260ms cubic-bezier(0.32, 0.72, 0, 1);
-        box-shadow: -4px 0 24px rgba(0,0,0,0.5);
+        transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
+        box-shadow: -6px 0 24px rgba(0,0,0,0.4);
     }
     #mobile-drawer-overlay.open #mobile-drawer { transform: translateX(0); }
 
@@ -118,115 +128,120 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.85rem 1rem;
-        background: linear-gradient(135deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-primary) 62%, white) 100%);
+        padding: 0.8rem 1rem;
+        background: linear-gradient(135deg,
+            var(--color-primary) 0%,
+            color-mix(in srgb, var(--color-primary) 60%, white) 100%);
         color: var(--color-on-primary);
         flex-shrink: 0;
     }
     #mobile-drawer-header span {
         font-family: "Lexend Deca", sans-serif;
         font-weight: 700;
-        font-size: 1rem;
+        font-size: 0.95rem;
     }
     #mobile-drawer-close {
-        background: rgba(255,255,255,0.15);
+        background: rgba(255,255,255,0.18);
         border: none;
         color: var(--color-on-primary);
-        width: 2rem; height: 2rem;
+        width: 1.8rem; height: 1.8rem;
         border-radius: 50%;
         cursor: pointer;
-        font-size: 1.1rem;
+        font-size: 1rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 100ms;
     }
-    #mobile-drawer-close:hover { background: rgba(255,255,255,0.28); }
 
-    .mobile-drawer-section { border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.4rem; }
+    .mobile-drawer-section { border-bottom: 1px solid rgba(128,128,128,0.18); padding-bottom: 0.35rem; }
+
     .mobile-drawer-section-title {
         font-family: "Lexend Deca", sans-serif;
-        font-size: 0.65rem;
-        font-weight: 700;
-        letter-spacing: 0.09em;
-        text-transform: uppercase;
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: var(--color-on-background);
         opacity: 0.45;
-        padding: 0.8rem 1rem 0.3rem;
+        padding: 0.7rem 1rem 0.2rem;
+        text-transform: none;
+        letter-spacing: 0;
     }
 
     .mobile-drawer-toggle {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.55rem 1rem;
+        padding: 0.5rem 1rem;
         font-family: "Lexend Deca", sans-serif;
-        font-size: 0.92rem;
+        font-size: 0.9rem;
         font-weight: 500;
+        color: var(--color-on-background);
         cursor: pointer;
         transition: background 100ms;
         user-select: none;
     }
-    .mobile-drawer-toggle:hover { background: rgba(255,255,255,0.06); }
+    .mobile-drawer-toggle:hover { background: rgba(128,128,128,0.1); }
 
     .mobile-toggle-pill {
-        width: 2.4rem; height: 1.3rem;
+        width: 2.3rem; height: 1.2rem;
         border-radius: 999px;
-        background: rgba(255,255,255,0.2);
+        background: rgba(128,128,128,0.3);
         position: relative;
-        transition: background 150ms;
+        transition: background 140ms;
         flex-shrink: 0;
     }
     .mobile-toggle-pill::after {
         content: '';
         position: absolute;
-        top: 0.15rem; left: 0.15rem;
-        width: 1rem; height: 1rem;
+        top: 0.13rem; left: 0.13rem;
+        width: 0.94rem; height: 0.94rem;
         border-radius: 50%;
         background: white;
-        transition: transform 150ms;
+        transition: transform 140ms;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.25);
     }
     .mobile-toggle-pill.on { background: var(--color-primary); }
-    .mobile-toggle-pill.on::after { transform: translateX(1.1rem); }
+    .mobile-toggle-pill.on::after { transform: translateX(1.08rem); }
 
     .mobile-drawer-info-btn {
         display: flex;
         align-items: center;
-        gap: 0.6rem;
+        justify-content: space-between;
         width: 100%;
         background: none;
         border: none;
         color: var(--color-on-background);
         font-family: "Lexend Deca", sans-serif;
-        font-size: 0.92rem;
+        font-size: 0.9rem;
         font-weight: 500;
-        padding: 0.6rem 1rem;
+        padding: 0.55rem 1rem;
         text-align: left;
         cursor: pointer;
         transition: background 100ms;
     }
-    .mobile-drawer-info-btn:hover { background: rgba(255,255,255,0.06); }
-    .mobile-drawer-info-btn svg { opacity: 0.55; flex-shrink: 0; }
+    .mobile-drawer-info-btn:hover { background: rgba(128,128,128,0.1); }
+    .mobile-drawer-info-btn .arrow { opacity: 0.35; }
 
     .mobile-drawer-numeric {
-        padding: 0.35rem 1rem 0.5rem;
+        padding: 0.3rem 1rem 0.45rem;
         display: flex;
         flex-direction: column;
-        gap: 0.3rem;
+        gap: 0.22rem;
     }
     .mobile-drawer-numeric label {
         font-family: "Lexend Deca", sans-serif;
-        font-size: 0.72rem;
+        font-size: 0.7rem;
         opacity: 0.5;
+        color: var(--color-on-background);
     }
     .mobile-drawer-numeric input {
         width: 100%;
-        padding: 0.4rem 0.6rem;
-        border-radius: 0.35rem;
-        border: 1px solid rgba(128,128,128,0.3);
-        background: rgba(128,128,128,0.1);
-        color: inherit;
+        padding: 0.36rem 0.55rem;
+        border-radius: 0.3rem;
+        border: 1px solid rgba(128,128,128,0.22);
+        background: rgba(128,128,128,0.09);
+        color: var(--color-on-background);
         font-family: "Lexend Deca", sans-serif;
-        font-size: 0.88rem;
+        font-size: 0.87rem;
         box-sizing: border-box;
     }
     .mobile-drawer-numeric input:focus { outline: 2px solid var(--color-primary); }
@@ -235,32 +250,34 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0.45rem 1rem;
+        padding: 0.42rem 1rem;
         font-family: "Lexend Deca", sans-serif;
-        font-size: 0.88rem;
+        font-size: 0.87rem;
         font-weight: 500;
+        color: var(--color-on-background);
         cursor: pointer;
         transition: background 100ms;
         user-select: none;
     }
-    .mobile-drawer-filter:hover { background: rgba(255,255,255,0.06); }
-    .mobile-drawer-filter .check { opacity: 0; font-size: 0.8rem; color: var(--color-primary); }
+    .mobile-drawer-filter:hover { background: rgba(128,128,128,0.1); }
+    .mobile-drawer-filter .check { opacity: 0; color: var(--color-primary); }
     .mobile-drawer-filter.active .check { opacity: 1; }
-    .mobile-drawer-separator { height: 1px; background: rgba(255,255,255,0.07); margin: 0.2rem 0; }
+    .mobile-drawer-separator { height: 1px; background: rgba(128,128,128,0.13); margin: 0.18rem 0; }
 
-    /* ════════════════════════════════════
-       FULL-SCREEN OVERLAY (Legend / Guidelines / Editors)
-    ════════════════════════════════════ */
+    /* -------------------------------------------------------
+       FULL-SCREEN INFO OVERLAY (Legend + Guidelines + Editors)
+    ------------------------------------------------------- */
     .mobile-overlay {
         position: fixed;
         inset: 0;
         z-index: 5000;
         background: var(--color-background);
+        color: var(--color-on-background);
         display: flex;
         flex-direction: column;
         overflow: hidden;
         transform: translateY(100%);
-        transition: transform 260ms cubic-bezier(0.32, 0.72, 0, 1);
+        transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
     }
     .mobile-overlay.visible { transform: translateY(0); }
 
@@ -268,51 +285,110 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        padding: 0.85rem 1rem;
+        padding: 0.8rem 1rem;
         flex-shrink: 0;
-        background: linear-gradient(135deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-primary) 62%, white) 100%);
+        background: linear-gradient(135deg,
+            var(--color-primary) 0%,
+            color-mix(in srgb, var(--color-primary) 60%, white) 100%);
         color: var(--color-on-primary);
     }
     .mobile-overlay__title {
         font-family: "Lexend Deca", sans-serif;
-        font-size: 1.05rem;
+        font-size: 1rem;
         font-weight: 700;
         flex: 1;
     }
     .mobile-overlay__close {
-        background: rgba(255,255,255,0.15);
+        background: rgba(255,255,255,0.18);
         border: none;
         color: var(--color-on-primary);
-        font-size: 1.2rem;
-        width: 2rem; height: 2rem;
+        width: 1.9rem; height: 1.9rem;
         border-radius: 50%;
         cursor: pointer;
+        font-size: 1.1rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: background 100ms;
     }
-    .mobile-overlay__close:hover { background: rgba(255,255,255,0.28); }
+
+    /* Tab bar */
+    .mobile-info-tabs {
+        display: flex;
+        border-bottom: 2px solid rgba(128,128,128,0.15);
+        flex-shrink: 0;
+        background: var(--color-background);
+    }
+    .mobile-info-tab {
+        background: none;
+        border: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        padding: 0.6rem 1rem;
+        font-family: "Lexend Deca", sans-serif;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--color-on-background);
+        cursor: pointer;
+        opacity: 0.45;
+        transition: opacity 100ms, border-color 100ms;
+        white-space: nowrap;
+    }
+    .mobile-info-tab.active { opacity: 1; border-color: var(--color-primary); }
 
     .mobile-overlay__body {
         flex: 1;
         overflow-y: auto;
-        padding: 1.25rem 1rem 2rem;
+        padding: 1.25rem 1rem 2.5rem;
         font-family: "Lexend Deca", sans-serif;
         line-height: 1.65;
         color: var(--color-on-background);
+        background: var(--color-background);
     }
-    .mobile-overlay__body .legend-list { margin-top: 0.5rem; list-style: none; padding: 0; }
-    .mobile-overlay__body .legend-list li { padding: 0.35rem 0; display: flex; align-items: center; gap: 0.65rem; }
-    .mobile-overlay__body .legend-dot { width: 0.75rem; height: 0.75rem; border-radius: 50%; flex-shrink: 0; display: inline-block; }
-    .mobile-overlay__body .editors { list-style: none; padding: 0; margin: 0.5rem 0 0; display: flex; flex-direction: column; gap: 0.65rem; }
-    .mobile-overlay__body .editors li { display: flex; align-items: center; gap: 0.65rem; }
-    .mobile-overlay__body .editors li img { height: 1.2rem; flex-shrink: 0; }
-    .mobile-overlay__body a { text-decoration: underline; }
 
-    /* ════════════════════════════════════
-       LIST — full width, rows stay as proper table rows
-    ════════════════════════════════════ */
+    .mobile-info-panel { display: none; }
+    .mobile-info-panel.active { display: block; }
+
+    .mobile-overlay__body .legend-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .mobile-overlay__body .legend-list li {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.45rem 0;
+        border-bottom: 1px solid rgba(128,128,128,0.1);
+    }
+    .mobile-overlay__body .legend-list li:last-child { border-bottom: none; }
+    .mobile-overlay__body .legend-dot {
+        width: 0.7rem; height: 0.7rem;
+        border-radius: 50%;
+        flex-shrink: 0;
+        display: inline-block;
+    }
+    .mobile-overlay__body .legend-text { font-size: 0.88rem; }
+
+    .mobile-overlay__body .editors {
+        list-style: none;
+        padding: 0; margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+    .mobile-overlay__body .editors li {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        font-size: 0.9rem;
+    }
+    .mobile-overlay__body .editors li img { height: 1.15rem; flex-shrink: 0; }
+    .mobile-overlay__body a { text-decoration: underline; color: var(--color-on-background); }
+    .mobile-overlay__body p { margin: 0 0 0.9rem; font-size: 0.9rem; }
+
+    /* -------------------------------------------------------
+       LIST — full width, real table rows
+    ------------------------------------------------------- */
     .page-list {
         display: flex !important;
         flex-direction: column !important;
@@ -321,81 +397,121 @@
 
     .list-container {
         width: 100% !important;
-        padding: 0.5rem 0.25rem 0 !important;
+        padding: 0.75rem 0.5rem 1rem !important;
         box-sizing: border-box;
     }
 
-    .page-list .list {
-        width: 100%;
-        border-collapse: collapse;
-        /* Keep as a real table so td layout works */
-        display: table !important;
-    }
-
-    /* Keep tbody/tr/td as real table elements */
+    .page-list .list { width: 100%; border-collapse: collapse; display: table !important; }
     .page-list .list tbody { display: table-row-group !important; }
     .page-list .list tr     { display: table-row !important; }
     .page-list .list td     { display: table-cell !important; }
 
-    /* rank cell */
     .page-list .list .rank {
-        width: 2.6rem !important;
+        width: 2.5rem !important;
         text-align: right !important;
         padding: 0.2rem 0.4rem 0.2rem 0 !important;
         vertical-align: middle !important;
         white-space: nowrap;
     }
-    .page-list .list .rank .type-label-lg { font-size: 0.75rem !important; }
-
-    /* level cell */
+    .page-list .list .rank .type-label-lg { font-size: 0.72rem !important; }
     .page-list .list .level { width: auto !important; }
-
     .page-list .list .level button {
-        padding: 0.35rem 0.5rem !important;
-        gap: 0.45rem !important;
+        padding: 0.35rem 0.45rem !important;
+        gap: 0.4rem !important;
         border-radius: 0.3rem !important;
         width: 100% !important;
     }
-
     .page-list .list .level-thumbnail {
-        width: 3.8rem !important;
-        height: 2.13rem !important;
+        width: 3.6rem !important;
+        height: 2rem !important;
         flex-shrink: 0;
     }
-
     .page-list .list .level button .type-label-lg {
-        font-size: 0.82rem !important;
+        font-size: 0.8rem !important;
         line-height: 1.25 !important;
     }
 
-    /* ── Inline level detail drawer ── */
+    /* -------------------------------------------------------
+       INLINE LEVEL DETAIL DRAWER
+    ------------------------------------------------------- */
     .mobile-level-drawer {
         display: none;
-        padding: 0.75rem 0.5rem 1.25rem;
+        padding: 1rem 0.75rem 1.75rem;
         box-sizing: border-box;
         border-bottom: 2px solid var(--color-primary);
+        background: var(--color-background);
+        color: var(--color-on-background);
     }
     .mobile-level-drawer.open { display: block; }
-
     .mobile-drawer-tr td { padding: 0 !important; }
 
+    /* The .level component inside the drawer */
     .mobile-level-drawer .level {
         max-width: 100% !important;
         padding-right: 0 !important;
-        gap: 1rem !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 1.1rem !important;   /* breathing room between every section */
     }
+
+    .mobile-level-drawer .level h1,
+    .mobile-level-drawer .level h2 {
+        font-size: 1.15rem !important;
+        margin: 0 0 0.1rem !important;
+        line-height: 1.3 !important;
+    }
+
+    /* Video embed */
     .mobile-level-drawer .video {
         width: 100%;
         aspect-ratio: 16/9;
         border: none;
+        border-radius: 0.4rem;
     }
+
+    /* Authors grid */
+    .mobile-level-drawer .level-authors {
+        display: grid !important;
+        grid-template-columns: max-content 1fr !important;
+        gap: 0.55rem 0.75rem !important;
+        font-size: 0.85rem !important;
+        line-height: 1.4 !important;
+    }
+
+    /* Tags row */
+    .mobile-level-drawer .tag {
+        font-size: 0.75rem !important;
+        padding: 3px 7px !important;
+    }
+
+    /* Body text */
+    .mobile-level-drawer .type-body {
+        font-size: 0.85rem !important;
+        line-height: 1.55 !important;
+        margin: 0 !important;
+    }
+
+    /* Stats row */
     .mobile-level-drawer .stats {
-        gap: 0.75rem !important;
-        flex-wrap: wrap;
-        justify-content: space-around !important;
+        display: flex !important;
+        gap: 0.6rem 1rem !important;
+        flex-wrap: wrap !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        list-style: none !important;
+    }
+
+    /* Records table */
+    .mobile-level-drawer .records {
+        font-size: 0.82rem !important;
+        width: 100% !important;
+    }
+    .mobile-level-drawer .records td,
+    .mobile-level-drawer .records th {
+        padding-block: 0.45rem !important;
     }
 
     /* Misc */
-    .search { margin-bottom: 10px !important; }
+    .search { margin-bottom: 0.6rem !important; }
     .spinner { grid-column: span 1 !important; }
 }
