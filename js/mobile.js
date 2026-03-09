@@ -17,16 +17,6 @@
         return null;
     }
 
-    function findListComp() {
-        var el = qs('.page-list');
-        while (el) {
-            var c = el.__vueParentComponent;
-            if (c && c.proxy && c.proxy.showThumbnails !== undefined) return c.proxy;
-            el = el.parentElement;
-        }
-        return null;
-    }
-
     function getRouter() {
         var app = document.getElementById('app');
         if (!app || !app.__vue_app__) return null;
@@ -86,20 +76,6 @@
         buildListSwitcher(listSect);
         drawer.appendChild(listSect);
 
-        drawer.appendChild(mkSectionTitle('Display'));
-        var dispSect = document.createElement('div');
-        dispSect.className = 'mobile-drawer-section';
-        dispSect.appendChild(makeToggleRow('Thumbnails', 'thumb'));
-        dispSect.appendChild(makeToggleRow('Level colors', 'color'));
-        drawer.appendChild(dispSect);
-
-        drawer.appendChild(mkSectionTitle('Filters'));
-        var filterSect = document.createElement('div');
-        filterSect.className = 'mobile-drawer-section';
-        filterSect.id = 'mobile-filter-section';
-        buildFilters(filterSect);
-        drawer.appendChild(filterSect);
-
         drawer.appendChild(mkSectionTitle('Settings'));
         var settingsSect = document.createElement('div');
         settingsSect.className = 'mobile-drawer-section';
@@ -126,11 +102,6 @@
 
         overlay.appendChild(drawer);
         document.body.appendChild(overlay);
-
-        setTimeout(function () {
-            wireToggle('thumb', 'showThumbnails');
-            wireToggle('color', 'showColors');
-        }, 400);
     }
 
     function buildListSwitcher(container) {
@@ -173,17 +144,6 @@
         return d;
     }
 
-    function makeToggleRow(label, key) {
-        var row = document.createElement('div');
-        row.className = 'mobile-drawer-toggle';
-        var pill = document.createElement('div');
-        pill.className = 'mobile-toggle-pill on';
-        pill.id = 'mobile-pill-' + key;
-        row.innerHTML = '<span>' + label + '</span>';
-        row.appendChild(pill);
-        return row;
-    }
-
     function makeDarkModeRow() {
         var row = document.createElement('div');
         row.className = 'mobile-drawer-toggle';
@@ -211,67 +171,6 @@
             setTimeout(function () { pill.classList.toggle('on', isDark()); }, 80);
         });
         return row;
-    }
-
-    function wireToggle(key, prop) {
-        var pill = qs('#mobile-pill-' + key);
-        if (!pill) return;
-        var c = findListComp();
-        if (c) pill.classList.toggle('on', !!c[prop]);
-        pill.parentElement.addEventListener('click', function () {
-            var c2 = findListComp();
-            if (!c2) return;
-            c2[prop] = !c2[prop];
-            pill.classList.toggle('on', !!c2[prop]);
-        });
-    }
-
-    function buildFilters(container) {
-        var decRow = document.createElement('div');
-        decRow.className = 'mobile-drawer-numeric';
-        decRow.innerHTML = '<label>Min decoration %</label><input id="mob-dec" type="number" min="0" max="100" placeholder="0">';
-        container.appendChild(decRow);
-
-        var verRow = document.createElement('div');
-        verRow.className = 'mobile-drawer-numeric';
-        verRow.innerHTML = '<label>Min verification %</label><input id="mob-ver" type="number" min="0" max="100" placeholder="0">';
-        container.appendChild(verRow);
-
-        setTimeout(function () {
-            var di = qs('#mob-dec'), vi = qs('#mob-ver');
-            if (di) di.addEventListener('input', function () {
-                var c = findListComp();
-                if (c) { c.minDecoration = Number(di.value) || 0; if (c.applyFilters) c.applyFilters(); }
-            });
-            if (vi) vi.addEventListener('input', function () {
-                var c = findListComp();
-                if (c) { c.minVerification = Number(vi.value) || 0; if (c.applyFilters) c.applyFilters(); }
-            });
-        }, 500);
-
-        setTimeout(function () {
-            var c = findListComp();
-            if (!c || !c.filtersList) return;
-            c.filtersList.forEach(function (item, idx) {
-                if (item.separator) { container.appendChild(mkSep()); return; }
-                var row = document.createElement('div');
-                row.className = 'mobile-drawer-filter' + (item.active ? ' active' : '');
-                row.innerHTML = '<span>' + item.name + '</span><span class="check">&#10003;</span>';
-                row.addEventListener('click', function () {
-                    var fc = findListComp();
-                    if (!fc) return;
-                    fc.useFilter(idx);
-                    row.classList.toggle('active', !!fc.filtersList[idx].active);
-                });
-                container.appendChild(row);
-            });
-        }, 500);
-    }
-
-    function mkSep() {
-        var s = document.createElement('div');
-        s.className = 'mobile-drawer-separator';
-        return s;
     }
 
     function openDrawerMenu() {
@@ -484,18 +383,27 @@
         removeInlineDrawer();
         if (listObserver) { listObserver.disconnect(); listObserver = null; }
         var attempts = 0;
-        var iv = setInterval(function () {
+        var poll = setInterval(function () {
             attempts++;
             var tbl = qs('.page-list .list');
             if (tbl) {
-                clearInterval(iv);
+                clearInterval(poll);
+                tbl.querySelectorAll('tr:not(.mobile-drawer-tr)').forEach(function (r) {
+                    delete r.dataset.mobileBound;
+                });
                 bindListRows();
                 watchLevelContainer();
-                listObserver = new MutationObserver(bindListRows);
+                listObserver = new MutationObserver(function () {
+                    tbl.querySelectorAll('tr:not(.mobile-drawer-tr)').forEach(function (r) {
+                        if (r.dataset.mobileBound) return;
+                        delete r.dataset.mobileBound;
+                    });
+                    bindListRows();
+                });
                 listObserver.observe(tbl, { childList: true });
             }
-            if (attempts > 40) clearInterval(iv);
-        }, 150);
+            if (attempts > 50) clearInterval(poll);
+        }, 100);
     }
 
     var booted = false;
@@ -508,8 +416,8 @@
         rebindAfterRouteChange();
     }
 
-    var iv = setInterval(function () {
-        if (qs('header.surface') && qs('.page-list')) { clearInterval(iv); boot(); }
+    var bootPoll = setInterval(function () {
+        if (qs('header.surface') && qs('.page-list')) { clearInterval(bootPoll); boot(); }
     }, 100);
 
     window.addEventListener('resize', function () { if (isMobile() && !booted) boot(); });
