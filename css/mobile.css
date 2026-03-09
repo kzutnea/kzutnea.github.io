@@ -19,25 +19,18 @@
     
     header.surface {
         height: 3.5rem !important;
-        padding-inline: 1rem !important;
-    }
-    header.surface .logo img { height: 2.4rem !important; }
-
-    
-    header.new {
+        padding: 0 0.5rem !important;
         display: flex !important;
         flex-direction: row !important;
-        align-items: stretch !important;
-        
-        padding: 0 0.5rem 0 0.5rem !important;
+        align-items: center !important;
         gap: 0 !important;
         overflow: visible !important;
-        
         width: 100% !important;
         box-sizing: border-box !important;
     }
+    header.surface .logo img { height: 2.4rem !important; }
 
-    header.new .nav {
+    header.surface .nav {
         display: flex !important;
         flex-direction: row !important;
         align-items: stretch !important;
@@ -49,9 +42,9 @@
         gap: 0 !important;
         scrollbar-width: none;
     }
-    header.new .nav::-webkit-scrollbar { display: none; }
+    header.surface .nav::-webkit-scrollbar { display: none; }
 
-    header.new .nav .nav__tab {
+    header.surface .nav .nav__tab {
         flex-shrink: 1 !important;
         white-space: nowrap;
         font-size: 0.68rem;
@@ -65,9 +58,9 @@
     }
 
     
-    header.new .nav .filters,
-    header.new .nav .nav__actions,
-    header.new .nav > div:not([class*="nav__tab"]) {
+    header.surface .nav .filters,
+    header.surface .nav .nav__actions,
+    header.surface .nav > div:not([class*="nav__tab"]) {
         display: none !important;
     }
 
