@@ -8,6 +8,7 @@
     var drawerBuilt = false;
     var openDrawerRow = null;
     var listObserver = null;
+    var levelObserver = null;
 
     function getStore() {
         var root = document.getElementById('app');
@@ -28,24 +29,24 @@
     }
 
     var listOptions = [
-        { label: 'All Levels',   hash: '#/',             matches: ['#/', '#/listmain', '#/listfuture', ''] },
-        { label: 'Main List',    hash: '#/listmain',     matches: ['#/listmain'] },
-        { label: 'Future List',  hash: '#/listfuture',   matches: ['#/listfuture'] },
-        { label: 'Leaderboard',  hash: '#/leaderboard',  matches: ['#/leaderboard'] },
-        { label: 'Pending List', hash: '#/pending',      matches: ['#/pending'] }
+        { label: 'All Levels',   hash: '#/',            matches: ['#/', '#/listmain', '#/listfuture', ''] },
+        { label: 'Main List',    hash: '#/listmain',    matches: ['#/listmain'] },
+        { label: 'Future List',  hash: '#/listfuture',  matches: ['#/listfuture'] },
+        { label: 'Leaderboard',  hash: '#/leaderboard', matches: ['#/leaderboard'] },
+        { label: 'Pending List', hash: '#/pending',     matches: ['#/pending'] }
     ];
 
     function buildDrawer() {
         if (drawerBuilt) return;
         drawerBuilt = true;
 
-        var navParent = qs('header.surface');
-        if (!navParent) return;
+        var header = qs('header.surface');
+        if (!header) return;
 
         var menuBtn = document.createElement('button');
         menuBtn.id = 'mobile-menu-btn';
         menuBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
-        navParent.appendChild(menuBtn);
+        header.appendChild(menuBtn);
         menuBtn.addEventListener('click', openDrawerMenu);
 
         var overlay = document.createElement('div');
@@ -120,8 +121,8 @@
                 } else {
                     location.hash = opt.hash;
                 }
-                setTimeout(updateListActive, 350);
-                setTimeout(rebindAfterRouteChange, 450);
+                setTimeout(updateListActive, 300);
+                setTimeout(rebindAfterRouteChange, 400);
             });
             container.appendChild(row);
         });
@@ -314,6 +315,12 @@
         });
     }
 
+    function clearBoundFlags() {
+        document.querySelectorAll('.page-list .list tr[data-mobile-bound]').forEach(function (row) {
+            row.removeAttribute('data-mobile-bound');
+        });
+    }
+
     function toggleInlineDrawer(row) {
         if (openDrawerRow === row) { removeInlineDrawer(); return; }
         removeInlineDrawer();
@@ -351,10 +358,10 @@
     }
 
     function watchLevelContainer() {
+        if (levelObserver) { levelObserver.disconnect(); levelObserver = null; }
         var lc = qs('.level-container');
-        if (!lc || lc._mw) return;
-        lc._mw = true;
-        new MutationObserver(function () {
+        if (!lc) return;
+        levelObserver = new MutationObserver(function () {
             if (!openDrawerRow || !isMobile()) return;
             var dtr = openDrawerRow.nextElementSibling;
             if (!dtr || !dtr.classList.contains('mobile-drawer-tr')) return;
@@ -376,7 +383,8 @@
             newTr.className = 'mobile-drawer-tr';
             newTr.appendChild(newTd);
             dtr.replaceWith(newTr);
-        }).observe(lc, { childList: true, subtree: true, characterData: true });
+        });
+        levelObserver.observe(lc, { childList: true, subtree: true, characterData: true });
     }
 
     function rebindAfterRouteChange() {
@@ -388,16 +396,11 @@
             var tbl = qs('.page-list .list');
             if (tbl) {
                 clearInterval(poll);
-                tbl.querySelectorAll('tr:not(.mobile-drawer-tr)').forEach(function (r) {
-                    delete r.dataset.mobileBound;
-                });
+                clearBoundFlags();
                 bindListRows();
                 watchLevelContainer();
                 listObserver = new MutationObserver(function () {
-                    tbl.querySelectorAll('tr:not(.mobile-drawer-tr)').forEach(function (r) {
-                        if (r.dataset.mobileBound) return;
-                        delete r.dataset.mobileBound;
-                    });
+                    clearBoundFlags();
                     bindListRows();
                 });
                 listObserver.observe(tbl, { childList: true });
