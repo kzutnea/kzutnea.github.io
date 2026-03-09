@@ -1,6 +1,5 @@
 @media screen and (max-width: 768px) {
-
-    /* ── Root: let page scroll naturally ── */
+    
     html, body, .root {
         height: auto;
         min-height: 100%;
