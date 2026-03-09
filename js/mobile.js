@@ -7,6 +7,15 @@
 
     var drawerBuilt = false;
     var openDrawerRow = null;
+    var listObserver = null;
+
+    function getStore() {
+        var root = document.getElementById('app');
+        if (!root || !root.__vue_app__) return null;
+        var inst = root.__vue_app__._instance;
+        if (inst && inst.proxy && inst.proxy.store) return inst.proxy.store;
+        return null;
+    }
 
     function findListComp() {
         var el = qs('.page-list');
@@ -18,21 +27,37 @@
         return null;
     }
 
+    function getRouter() {
+        var app = document.getElementById('app');
+        if (!app || !app.__vue_app__) return null;
+        return app.__vue_app__.config.globalProperties.$router;
+    }
+
+    function currentHash() {
+        return location.hash || '#/';
+    }
+
+    var listOptions = [
+        { label: 'All Levels',   hash: '#/',             matches: ['#/', '#/listmain', '#/listfuture', ''] },
+        { label: 'Main List',    hash: '#/listmain',     matches: ['#/listmain'] },
+        { label: 'Future List',  hash: '#/listfuture',   matches: ['#/listfuture'] },
+        { label: 'Leaderboard',  hash: '#/leaderboard',  matches: ['#/leaderboard'] },
+        { label: 'Pending List', hash: '#/pending',      matches: ['#/pending'] }
+    ];
+
     function buildDrawer() {
         if (drawerBuilt) return;
         drawerBuilt = true;
 
-        var nav = qs('header.new .nav');
-        if (!nav) return;
+        var navParent = qs('header.surface');
+        if (!navParent) return;
 
-        /* Menu button — sits after .nav inside header.new */
         var menuBtn = document.createElement('button');
         menuBtn.id = 'mobile-menu-btn';
         menuBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>';
-        nav.parentElement.appendChild(menuBtn);
+        navParent.appendChild(menuBtn);
         menuBtn.addEventListener('click', openDrawerMenu);
 
-        /* Overlay shell */
         var overlay = document.createElement('div');
         overlay.id = 'mobile-drawer-overlay';
 
@@ -44,7 +69,6 @@
         var drawer = document.createElement('div');
         drawer.id = 'mobile-drawer';
 
-        /* Drawer header */
         var dh = document.createElement('div');
         dh.id = 'mobile-drawer-header';
         dh.innerHTML = '<span>Menu</span>';
@@ -55,7 +79,13 @@
         dh.appendChild(closeX);
         drawer.appendChild(dh);
 
-        /* Section: Display */
+        drawer.appendChild(mkSectionTitle('Lists'));
+        var listSect = document.createElement('div');
+        listSect.className = 'mobile-drawer-section';
+        listSect.id = 'mobile-list-section';
+        buildListSwitcher(listSect);
+        drawer.appendChild(listSect);
+
         drawer.appendChild(mkSectionTitle('Display'));
         var dispSect = document.createElement('div');
         dispSect.className = 'mobile-drawer-section';
@@ -63,7 +93,6 @@
         dispSect.appendChild(makeToggleRow('Level colors', 'color'));
         drawer.appendChild(dispSect);
 
-        /* Section: Filters */
         drawer.appendChild(mkSectionTitle('Filters'));
         var filterSect = document.createElement('div');
         filterSect.className = 'mobile-drawer-section';
@@ -71,38 +100,29 @@
         buildFilters(filterSect);
         drawer.appendChild(filterSect);
 
-        /* Section: Info (single button) */
+        drawer.appendChild(mkSectionTitle('Settings'));
+        var settingsSect = document.createElement('div');
+        settingsSect.className = 'mobile-drawer-section';
+        settingsSect.appendChild(makeDarkModeRow());
+        var discordBtn = document.createElement('a');
+        discordBtn.className = 'mobile-drawer-info-btn';
+        discordBtn.href = 'https://discord.gg/9wVWSgJSe8';
+        discordBtn.target = '_blank';
+        discordBtn.rel = 'noopener';
+        discordBtn.style.textDecoration = 'none';
+        discordBtn.innerHTML = '<span>Discord</span><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.35"><path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963.021-.04.001-.088-.041-.104a13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028z"/></svg>';
+        settingsSect.appendChild(discordBtn);
+        drawer.appendChild(settingsSect);
+
         drawer.appendChild(mkSectionTitle('Info'));
         var infoSect = document.createElement('div');
         infoSect.className = 'mobile-drawer-section';
         var infoBtn = document.createElement('button');
         infoBtn.className = 'mobile-drawer-info-btn';
-        infoBtn.innerHTML = '<span>Legend, Guidelines &amp; Editors</span><span class="arrow">&#8250;</span>';
+        infoBtn.innerHTML = '<span>Info</span><span class="arrow">&#8250;</span>';
         infoBtn.addEventListener('click', function () { closeDrawerMenu(); openInfoOverlay(); });
         infoSect.appendChild(infoBtn);
         drawer.appendChild(infoSect);
-
-        /* Section: Theme */
-        drawer.appendChild(mkSectionTitle('Theme'));
-        var themeSect = document.createElement('div');
-        themeSect.className = 'mobile-drawer-section';
-        themeSect.appendChild(makeDarkModeRow());
-        drawer.appendChild(themeSect);
-
-        /* Section: Links */
-        drawer.appendChild(mkSectionTitle('Links'));
-        var linksSect = document.createElement('div');
-        linksSect.className = 'mobile-drawer-section';
-        var discordBtn = document.createElement('a');
-        discordBtn.className = 'mobile-drawer-info-btn';
-        discordBtn.href = 'https://discord.gg/upcoming-ll';
-        discordBtn.target = '_blank';
-        discordBtn.rel = 'noopener';
-        discordBtn.style.textDecoration = 'none';
-        discordBtn.innerHTML = '<span>Discord</span>'
-            + '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.4"><path d="M20.317 4.492c-1.53-.69-3.17-1.2-4.885-1.49a.075.075 0 0 0-.079.036c-.21.369-.444.85-.608 1.23a18.566 18.566 0 0 0-5.487 0 12.36 12.36 0 0 0-.617-1.23A.077.077 0 0 0 8.562 3c-1.714.29-3.354.8-4.885 1.491a.07.07 0 0 0-.032.027C.533 9.093-.32 13.555.099 17.961a.08.08 0 0 0 .031.055 20.03 20.03 0 0 0 5.993 2.98.078.078 0 0 0 .084-.026c.462-.62.874-1.275 1.226-1.963.021-.04.001-.088-.041-.104a13.201 13.201 0 0 1-1.872-.878.075.075 0 0 1-.008-.125c.126-.093.252-.19.372-.287a.075.075 0 0 1 .078-.01c3.927 1.764 8.18 1.764 12.061 0a.075.075 0 0 1 .079.009c.12.098.245.195.372.288a.075.075 0 0 1-.006.125c-.598.344-1.22.635-1.873.877a.075.075 0 0 0-.041.105c.36.687.772 1.341 1.225 1.962a.077.077 0 0 0 .084.028 19.963 19.963 0 0 0 6.002-2.981.076.076 0 0 0 .032-.054c.5-5.094-.838-9.52-3.549-13.442a.06.06 0 0 0-.031-.028z"/></svg>';
-        linksSect.appendChild(discordBtn);
-        drawer.appendChild(linksSect);
 
         overlay.appendChild(drawer);
         document.body.appendChild(overlay);
@@ -111,6 +131,39 @@
             wireToggle('thumb', 'showThumbnails');
             wireToggle('color', 'showColors');
         }, 400);
+    }
+
+    function buildListSwitcher(container) {
+        var h = currentHash();
+        listOptions.forEach(function (opt) {
+            var row = document.createElement('div');
+            row.className = 'mobile-drawer-filter' + (opt.matches.indexOf(h) !== -1 ? ' active' : '');
+            row.innerHTML = '<span>' + opt.label + '</span><span class="check">&#10003;</span>';
+            row.addEventListener('click', function () {
+                closeDrawerMenu();
+                removeInlineDrawer();
+                var router = getRouter();
+                var path = opt.hash.replace(/^#/, '');
+                if (router) {
+                    router.push(path).catch(function () {});
+                } else {
+                    location.hash = opt.hash;
+                }
+                setTimeout(updateListActive, 350);
+                setTimeout(rebindAfterRouteChange, 450);
+            });
+            container.appendChild(row);
+        });
+    }
+
+    function updateListActive() {
+        var h = currentHash();
+        var rows = document.querySelectorAll('#mobile-list-section .mobile-drawer-filter');
+        rows.forEach(function (row, i) {
+            var opt = listOptions[i];
+            if (!opt) return;
+            row.classList.toggle('active', opt.matches.indexOf(h) !== -1);
+        });
     }
 
     function mkSectionTitle(text) {
@@ -140,27 +193,22 @@
         row.innerHTML = '<span>Dark mode</span>';
         row.appendChild(pill);
 
-        /* Detect current theme and sync pill */
         function isDark() {
-            return document.documentElement.classList.contains('dark')
-                || document.documentElement.getAttribute('data-theme') === 'dark'
-                || document.body.classList.contains('dark')
-                || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-                    && !document.documentElement.classList.contains('light'));
+            var root = qs('.root');
+            return root ? root.classList.contains('dark') : false;
         }
-        pill.classList.toggle('on', isDark());
+
+        setTimeout(function () { pill.classList.toggle('on', isDark()); }, 300);
 
         row.addEventListener('click', function () {
-            /* Try to find and click the existing desktop toggle first */
-            var desktopToggle = document.querySelector('[data-theme-toggle], .theme-toggle, .color-scheme-toggle, button[aria-label*="dark" i], button[aria-label*="theme" i], button[title*="dark" i]');
-            if (desktopToggle) {
-                desktopToggle.click();
+            var store = getStore();
+            if (store && typeof store.toggleDark === 'function') {
+                store.toggleDark();
             } else {
-                /* Fallback: manually toggle dark class */
-                document.documentElement.classList.toggle('dark');
-                document.body.classList.toggle('dark');
+                var btn = qs('.nav__actions .nav__icon');
+                if (btn) btn.click();
             }
-            setTimeout(function () { pill.classList.toggle('on', isDark()); }, 60);
+            setTimeout(function () { pill.classList.toggle('on', isDark()); }, 80);
         });
         return row;
     }
@@ -227,17 +275,18 @@
     }
 
     function openDrawerMenu() {
+        updateListActive();
         var o = qs('#mobile-drawer-overlay');
         if (o) o.classList.add('open');
         document.body.style.overflow = 'hidden';
     }
+
     function closeDrawerMenu() {
         var o = qs('#mobile-drawer-overlay');
         if (o) o.classList.remove('open');
         document.body.style.overflow = '';
     }
 
-    /* ---- Combined info overlay (3 tabs) ---- */
     function openInfoOverlay() {
         var existing = qs('#mobile-info-overlay');
         if (existing) existing.remove();
@@ -246,7 +295,6 @@
         el.className = 'mobile-overlay';
         el.id = 'mobile-info-overlay';
 
-        /* Header */
         var hdr = document.createElement('div');
         hdr.className = 'mobile-overlay__header';
         hdr.innerHTML = '<span class="mobile-overlay__title">Info</span>';
@@ -263,12 +311,10 @@
         hdr.appendChild(cx);
         el.appendChild(hdr);
 
-        /* Tab bar */
         var tabBar = document.createElement('div');
         tabBar.className = 'mobile-info-tabs';
         el.appendChild(tabBar);
 
-        /* Body */
         var body = document.createElement('div');
         body.className = 'mobile-overlay__body';
         el.appendChild(body);
@@ -281,7 +327,6 @@
         var panels = {};
 
         tabDefs.forEach(function (t, i) {
-            /* Tab button */
             var btn = document.createElement('button');
             btn.className = 'mobile-info-tab' + (i === 0 ? ' active' : '');
             btn.textContent = t.label;
@@ -293,7 +338,6 @@
             });
             tabBar.appendChild(btn);
 
-            /* Panel */
             var panel = document.createElement('div');
             panel.className = 'mobile-info-panel' + (i === 0 ? ' active' : '');
             panel.innerHTML = getInfoHTML(t.key);
@@ -309,7 +353,6 @@
     }
 
     function getInfoHTML(id) {
-        /* Clone content from hidden meta-container */
         var metaEl = qs('.meta-container');
         if (id === 'legend') {
             if (metaEl) {
@@ -358,7 +401,6 @@
         }).join('');
     }
 
-    /* ---- Inline level drawers ---- */
     function bindListRows() {
         if (!isMobile()) return;
         document.querySelectorAll('.page-list .list tr:not(.mobile-drawer-tr)').forEach(function (row) {
@@ -366,7 +408,8 @@
             row.dataset.mobileBound = '1';
             var btn = row.querySelector('button');
             if (!btn) return;
-            btn.addEventListener('click', function () {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
                 setTimeout(function () { toggleInlineDrawer(row); }, 80);
             });
         });
@@ -437,35 +480,44 @@
         }).observe(lc, { childList: true, subtree: true, characterData: true });
     }
 
+    function rebindAfterRouteChange() {
+        removeInlineDrawer();
+        if (listObserver) { listObserver.disconnect(); listObserver = null; }
+        var attempts = 0;
+        var iv = setInterval(function () {
+            attempts++;
+            var tbl = qs('.page-list .list');
+            if (tbl) {
+                clearInterval(iv);
+                bindListRows();
+                watchLevelContainer();
+                listObserver = new MutationObserver(bindListRows);
+                listObserver.observe(tbl, { childList: true });
+            }
+            if (attempts > 40) clearInterval(iv);
+        }, 150);
+    }
+
     var booted = false;
 
     function boot() {
         if (!isMobile() || booted) return;
-        if (!qs('header.new .nav')) return;
+        if (!qs('header.surface')) return;
         booted = true;
         buildDrawer();
-        bindListRows();
-        watchLevelContainer();
-        var tbl = qs('.page-list .list');
-        if (tbl) new MutationObserver(bindListRows).observe(tbl, { childList: true });
+        rebindAfterRouteChange();
     }
 
     var iv = setInterval(function () {
-        if (qs('header.new .nav') && qs('.page-list')) { clearInterval(iv); boot(); }
+        if (qs('header.surface') && qs('.page-list')) { clearInterval(iv); boot(); }
     }, 100);
 
     window.addEventListener('resize', function () { if (isMobile() && !booted) boot(); });
 
     window.addEventListener('hashchange', function () {
-        booted = false; drawerBuilt = false; openDrawerRow = null;
-        ['#mobile-menu-btn','#mobile-drawer-overlay','#mobile-info-overlay'].forEach(function (s) {
-            var e = qs(s); if (e) e.remove();
-        });
-        setTimeout(function () {
-            var iv2 = setInterval(function () {
-                if (qs('header.new .nav') && qs('.page-list')) { clearInterval(iv2); boot(); }
-            }, 100);
-        }, 200);
+        updateListActive();
+        removeInlineDrawer();
+        rebindAfterRouteChange();
     });
 
 }());
