@@ -1,14 +1,3 @@
-/**
- * mobile.js — single ☰ menu that contains:
- *   • Thumbnails toggle
- *   • Colors toggle
- *   • Filters (numeric + tag chips)
- *   • Legend  → opens full-screen overlay
- *   • List Guidelines → opens full-screen overlay
- *   • List Editors    → opens full-screen overlay
- *
- * Also handles inline level-detail drawers in the list.
- */
 (function () {
     "use strict";
 
