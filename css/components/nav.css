@@ -137,6 +137,17 @@ header.new .nav .nav__tab:hover {
     background-color: rgba(255, 255, 255, 0.2);
 }
 
+/* Info button shares color-toggle-btn base styles but may have its own margin */
+.info-btn {
+    /* reuse color-toggle-btn styles */
+    margin-right: 12px;
+    font-size: 1.25rem;
+}
+
+.info-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
 .color-toggle-btn.active {
     opacity: 1;
 }

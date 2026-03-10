@@ -36,6 +36,11 @@ main.page-list--pending .list-container {
     padding-right: 2rem;
 }
 
+/* when metadata pane is hidden we don't need the third grid column */
+.page-list.hide-meta {
+    grid-template-columns: minmax(16rem, 1.15fr) minmax(16rem, 1.9fr);
+}
+
 .page-list .list {
     table-layout: auto;
 }

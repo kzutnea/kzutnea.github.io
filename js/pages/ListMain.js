@@ -62,7 +62,7 @@ export default {
 		<main v-if="loading" class="surface">
             <Spinner></Spinner>
         </main>
-        <main v-else class="page-list">
+        <main v-else class="page-list" :class="{ 'hide-meta': !showMeta }">
             <div class="list-container surface">
                 <input
                     v-model="search"
@@ -172,7 +172,7 @@ export default {
                     <p>(ノಠ益ಠ)ノ彡┻━┻</p>
                 </div>
             </div>
-            <div class="meta-container surface">
+            <div v-if="showMeta" class="meta-container surface">
                 <div class="meta">
                     <div class="errors" v-show="errors.length > 0">
                         <p class="error" v-for="error of errors">{{ error }}</p>
@@ -209,8 +209,7 @@ export default {
         isFiltersActive: false,
         filtersList: filtersList,
         showThumbnails: true,
-        showColors: true,
-        search: "",
+        showColors: true,        showMeta: false,        search: "",
         minDecoration: 0,
         minVerification: 0,
     }),
@@ -286,6 +285,9 @@ export default {
         score,
         filtersToggle() {
             this.isFiltersActive = !this.isFiltersActive;
+        },
+        toggleInfo() {
+            this.showMeta = !this.showMeta;
         },
         getLevelNameStyle(level, isSelected) {
             if (!level) return {};

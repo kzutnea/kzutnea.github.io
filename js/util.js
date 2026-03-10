@@ -66,6 +66,7 @@ export const filtersList = [
 
 
 export const filtersSetup = `<div style="flex-grow:1"></div>
+                <button @click="toggleInfo()" class="color-toggle-btn info-btn" title="Info">ℹ</button>
 				<div :class="{ 'filters-selected': isFiltersActive }" class="filters">
 					<div style="display:flex; align-items:center;">
 						<button @click="showThumbnails = !showThumbnails" class="color-toggle-btn thumb-toggle-btn" :class="{ active: showThumbnails }" title="Toggle thumbnails">
