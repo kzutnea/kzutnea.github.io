@@ -21,6 +21,16 @@ const router = VueRouter.createRouter({
     routes,
 });
 
-app.use(router);
+// Auto-redirect mobile devices
+const isMobile = () => window.innerWidth <= 768 || /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+router.beforeEach((to, from, next) => {
+    if (isMobile() && to.path !== '/mobile') {
+        next('/mobile');
+    } else if (!isMobile() && to.path === '/mobile') {
+        next('/');
+    } else {
+        next();
+    }
+});
 
 app.mount('#app');
