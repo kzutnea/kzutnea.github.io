@@ -1,8 +1,7 @@
 import routes from './routes.js';
 
 export const store = Vue.reactive({
-    dark: localStorage.getItem('dark') === null ? true : JSON.parse(localStorage.getItem('dark')),
-    mobile: localStorage.getItem('mobile') === 'true',
+    dark: localStorage.getItem('dark') === null ? false : JSON.parse(localStorage.getItem('dark')),
     toggleDark() {
         this.dark = !this.dark;
         localStorage.setItem('dark', JSON.stringify(this.dark));
@@ -33,4 +32,5 @@ router.beforeEach((to, from, next) => {
     }
 });
 
+app.use(router);
 app.mount('#app');
